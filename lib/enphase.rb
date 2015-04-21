@@ -49,8 +49,8 @@ module Enphase
   #
   # Returns JSON response of the API with status, and body
 
-  def self.get_enphase_summary(user_id, system_id)
-    endpoint = build_endpoint("summary", system_id)
+  def self.get_enphase_summary(user_id)
+    endpoint = build_endpoint("summary")
     query_string = build_query_string(user_id, :get_enphase_summary, {})
     
     Enphase::ApiWrapper.get_response(endpoint, query_string)
