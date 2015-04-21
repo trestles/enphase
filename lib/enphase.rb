@@ -1,4 +1,3 @@
-# Copyright (C) 2015 TopCoder Inc., All Rights Reserved.
 
 require "enphase/version"
 require "enphase/config"
@@ -11,7 +10,7 @@ require "enphase/fixnum"
 require "active_support/core_ext/time/calculations"
 
 # The main entry of the module. Provides several methods that calls EnPhase API.
-# 
+#
 # For example:
 #   # The following will call get_enphase_summary EnPhase API and returns the enphase summary.
 #   require "enphase"
@@ -25,7 +24,7 @@ require "active_support/core_ext/time/calculations"
 module Enphase
 
   # Public: Sets enphase_key for the API calls.
-  # 
+  #
   # enphase_key - enphase_key to be passed in the API.
   #
   # Examples
@@ -34,13 +33,24 @@ module Enphase
 
   def self.set_enphase_key(enphase_key)
     @enphase_key = enphase_key
+
   end
-  
+
+  def self.get_enphase_index(user_id)
+    #endpoint = build_endpoint("summary")
+    #{}"/systems"
+    #query_string = build_query_string(user_id, :get_enphase_summary, {})
+    query_string = build_query_string(user_id, :get_enphase_energy_lifetime)
+    #Enphase::ApiWrapper.get_response(endpoint, query_string)
+    Enphase::ApiWrapper.get_response("/systems", query_string)
+  end
+
+
   # Public:  Calls /systems/system_id/summary EnPhase API.
   #
   # user_id - ENphase user ID obtained from the Enlighten API.
   # system_id - ID of the system to be passed in the API.
-  # 
+  #
   # Examples
   #   require "enphase"
   #   Enphase.set_enphase_key("faff6d1c8fdd381dcbb9ca0bf90db5d7")
@@ -50,46 +60,45 @@ module Enphase
   # Returns JSON response of the API with status, and body
 
   def self.get_enphase_summary(user_id)
-    endpoint = build_endpoint("summary")
+    endpoint = build_endpoint("summary", system_id)
     query_string = build_query_string(user_id, :get_enphase_summary, {})
-    
     Enphase::ApiWrapper.get_response(endpoint, query_string)
   end
 
 
   # Public:  Calls /systems/system_id/summary EnPhase API.
-  # 
+  #
   # user_id - ENphase user ID obtained from the Enlighten API.
   # system_id - ID of the system to be passed in the API.
   # params - summary_date for which the data to be retreived.
-  # 
+  #
   # Examples
   #   require "enphase"
   #   Enphase.set_enphase_key("faff6d1c8fdd381dcbb9ca0bf90db5d7")
   #   response = Enphase.get_enphase_feed("4d7a45774e6a41320a", 67, :summary_date => "2015-01-02")
   #   # => [enphase_summary]
-  # 
+  #
   # Returns JSON response of the API with status, and body
 
   def self.get_enphase_feed(user_id, system_id, params)
     endpoint = build_endpoint("summary", system_id)
     query_string = build_query_string(user_id, :get_enphase_feed, params)
-    
+
     Enphase::ApiWrapper.get_response(endpoint, query_string)
   end
 
 
   # Public:  Calls /systems/system_id/summary EnPhase API.
   # Accepts enphase_user_id and system_id as input params.
-  # 
+  #
   # user_id - ENphase user ID obtained from the Enlighten API.
   # system_id - ID of the system to be passed in the API.
-  # 
+  #
   # Examples
   #   require "enphase"
   #   Enphase.set_enphase_key("faff6d1c8fdd381dcbb9ca0bf90db5d7")
   #   response = Enphase.get_enphase_last_7_day_summaries("4d7a45774e6a41320a", 67)
-  # 
+  #
   # Returns total energy value of summaries with API response status
 
   def self.get_enphase_last_7_day_summaries(user_id, system_id)
@@ -98,39 +107,39 @@ module Enphase
       @response = get_enphase_feed(user_id, system_id, { :summary_date => i.days.ago.strftime("%Y-%m-%d") })
       if @response.status == 200
         body_json = JSON.parse(@response.body)
-        total_value += body_json['energy_today'] 
+        total_value += body_json['energy_today']
       else
         return @response
       end
     end
-    
-    # Check with client on what all additional data to be sent. 
+
+    # Check with client on what all additional data to be sent.
     { :status => @response.status, :body => { :total_energy_value => total_value }}
   end
 
 
-  # Public:  Calls /systems/system_id/stats EnPhase API.  
-  # 
+  # Public:  Calls /systems/system_id/stats EnPhase API.
+  #
   # user_id - ENphase user ID obtained from the Enlighten API.
   # system_id - ID of the system to be passed in the API.
-  # 
+  #
   # Examples
   #   require "enphase"
   #   Enphase.set_enphase_key("faff6d1c8fdd381dcbb9ca0bf90db5d7")
   #   response = Enphase.get_enphase_last_7_day_stats("4d7a45774e6a41320a", 67)
   #   # => [enphase_stat]
-  # 
+  #
   # Returns JSON response of the API with status, and body
 
   def self.get_enphase_last_7_day_stats(user_id, system_id)
-    params = { :start_at => 7.days.ago.beginning_of_day.to_i.to_s, 
+    params = { :start_at => 7.days.ago.beginning_of_day.to_i.to_s,
       :end_at => (1.days.ago.end_of_day.to_i).to_s }
     get_enphase_stats(user_id, system_id, params)
   end
 
 
-  # Public:  Calls /systems/system_id/stats EnPhase API.  
-  # 
+  # Public:  Calls /systems/system_id/stats EnPhase API.
+  #
   # user_id - ENphase user ID obtained from the Enlighten API.
   # system_id - ID of the system to be passed in the API.
   #
@@ -143,7 +152,7 @@ module Enphase
   # Returns JSON response of the API with status, and body.
 
   def self.get_enphase_today_stats(user_id, system_id)
-    params = { :start_at => Time.now.beginning_of_day.to_i.to_s, 
+    params = { :start_at => Time.now.beginning_of_day.to_i.to_s,
       :end_at => Time.now.to_i.to_s }
     get_enphase_stats(user_id, system_id, params)
   end
@@ -158,7 +167,7 @@ module Enphase
   # Examples
   #   require "enphase"
   #   Enphase.set_enphase_key("faff6d1c8fdd381dcbb9ca0bf90db5d7")
-  #   response = Enphase.get_enphase_historical_stats("4d7a45774e6a41320a", 67, 
+  #   response = Enphase.get_enphase_historical_stats("4d7a45774e6a41320a", 67,
   #                        :start_at => "1411822918" , :end_at => "1414414914" )
   #   # => [enphase_stat]
   #
@@ -166,14 +175,14 @@ module Enphase
 
   def self.get_enphase_historical_stats(user_id, system_id, params)
     get_enphase_stats(user_id, system_id, params)
-  end  
+  end
 
 
   # Calls /systems/system_id/energy_lifetime EnPhase API.
   #
   # user_id - ENphase user ID obtained from the Enlighten API.
   # system_id - ID of the system to be passed in the API.
-  # 
+  #
   # Examples
   #   require "enphase"
   #   Enphase.set_enphase_key("faff6d1c8fdd381dcbb9ca0bf90db5d7")
@@ -182,7 +191,7 @@ module Enphase
   #
   # Returns JSON response of the API with status, and body
 
-  def self.get_enphase_energy_lifetime(user_id, system_id)    
+  def self.get_enphase_energy_lifetime(user_id, system_id)
     endpoint = build_endpoint("energy_lifetime", system_id)
     query_string = build_query_string(user_id, :get_enphase_energy_lifetime)
 
@@ -204,14 +213,14 @@ module Enphase
 
     # This methods wraps /systems/system_id/stats EnPhase API and is used for retrieving today's stats,
     # last 7 days' stats and historical stats.
-    # 
+    #
     # Bug in EnPhase systems - Subracting 12 seconds from the endtime.
     def self.get_enphase_stats(user_id, system_id, params)
       endpoint = build_endpoint("stats", system_id)
       params[:end_at] = (params[:end_at].to_i - 12).to_s
       query_string = build_query_string(user_id, :get_enphase_stats, params)
-      
+
       Enphase::ApiWrapper.get_response(endpoint, query_string)
     end
-  
+
 end
